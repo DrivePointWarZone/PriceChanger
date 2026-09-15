@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Генератор Ценников Figma Style</title>
-  <!-- Tailwind CSS для интерфейса управления -->
-  <script src="https://jsdelivr.net"></script>
+  <title>Редактор ценников</title>
+  <!-- Надежная CDN-версия Tailwind CSS -->
+  <script src="https://jsdelivr.net Cobb/https://cloudflare.com"></script>
+  <link href="https://jsdelivr.netnpm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <!-- Библиотека html2pdf.js для сохранения А4 -->
   <script src="https://cloudflare.com"></script>
   
@@ -22,7 +23,7 @@
       font-family: 'DDTHv-Regular', 'Impact', 'Arial Black', sans-serif;
     }
 
-    /* Точные размеры и адаптив печатного листа */
+    /* Проверенная сетка печатного листа А4 */
     #print-area {
       width: 210mm;
       min-height: 297mm;
@@ -85,55 +86,65 @@
       position: relative;
     }
 
-    /* Кастомный скроллбар для эстетики приложения */
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: #1e293b; }
-    ::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+    /* Скрытие стандартных стрелок у числовых инпутов */
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input[type="number"] {
+      -moz-appearance: textfield;
+    }
+
+    /* Плавный скроллбар для iOS-стиля */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: #0f172a; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 99px; }
   </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen figma-font">
+<body class="bg-gray-950 text-gray-100 min-h-screen font-sans antialiased selection:bg-yellow-500 selection:text-black">
 
-  <!-- Интерфейс конструктора -->
+  <!-- Основной контейнер приложения -->
   <div class="flex flex-col lg:flex-row min-h-screen">
     
-    <!-- Панель управления (Левая сторона) -->
-    <div class="w-full lg:w-5/12 bg-slate-900 p-6 flex flex-col justify-between border-r border-slate-800 shadow-xl">
+    <!-- Панель управления (Адаптирована под iPhone / Экран настроек) -->
+    <div class="w-full lg:w-5/12 bg-gray-900 p-4 sm:p-6 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-gray-800 shadow-2xl z-20">
       <div>
-        <div class="flex items-center justify-between mb-8">
-          <div class="flex items-center gap-3">
-            <span class="text-2xl">⚡</span>
-            <div>
-              <h1 class="text-xl font-black uppercase tracking-wider text-white">BlackTag Pro</h1>
-              <p class="text-xs text-slate-400 font-sans">Конструктор ценников в стиле Figma</p>
-            </div>
+        <!-- Минималистичная шапка -->
+        <div class="flex items-center justify-between mb-6 sm:mb-8">
+          <div>
+            <h1 class="text-xl font-bold tracking-tight text-white">Редактор ценников</h1>
+            <p class="text-xs text-gray-400">Управление позициями на листе А4</p>
           </div>
-          <button onclick="exportPDF()" class="bg-yellow-500 hover:bg-yellow-400 text-slate-950 px-5 py-2.5 rounded-xl font-bold text-sm tracking-wide shadow-lg shadow-yellow-500/20 transition-all cursor-pointer">
-            Сохранить А4 (PDF)
+          <button onclick="exportPDF()" class="bg-yellow-500 hover:bg-yellow-400 text-gray-950 px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider shadow-lg shadow-yellow-500/10 transition-all active:scale-95 cursor-pointer">
+            Скачать PDF
           </button>
         </div>
 
+        <!-- Кнопки управления списком -->
         <div class="flex justify-between items-center mb-4">
-          <h2 class="text-sm font-bold uppercase tracking-widest text-slate-400">Позиции на листе</h2>
-          <button onclick="addProduct()" class="bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer">
-            + Добавить
+          <h2 class="text-xs font-semibold uppercase tracking-widest text-gray-500">Товары</h2>
+          <button onclick="addProduct()" class="bg-gray-800 hover:bg-gray-700 text-white px-3 py-1.5 rounded-xl text-xs font-medium flex items-center gap-1 transition-all active:scale-95 cursor-pointer">
+            <span>+</span> Добавить позицию
           </button>
         </div>
 
-        <!-- Контейнер для строк с товарами -->
-        <div id="editor-rows" class="space-y-3 max-h-[calc(100vh-280px)] overflow-y-auto pr-2">
+        <!-- Контейнер для строк с товарами (iOS-like карточки) -->
+        <div id="editor-rows" class="space-y-3 max-h-[50vh] lg:max-h-[calc(100vh-240px)] overflow-y-auto pr-1">
           <!-- Рендерится из JS -->
         </div>
       </div>
 
-      <div class="mt-6 pt-4 border-t border-slate-800 text-xs text-slate-500 font-sans flex justify-between">
-        <span>Шрифт: DDTHv-Regular.woff2</span>
-        <span>Сетка: А4 (3 в ряд)</span>
+      <!-- Футер панели -->
+      <div class="mt-6 pt-4 border-t border-gray-800 text-[11px] text-gray-500 flex justify-between font-mono">
+        <span>Шрифт: DDTHv-Regular</span>
+        <span>Сетка: 3 в ряд</span>
       </div>
     </div>
 
-    <!-- Область интерактивного просмотра А4 (Правая сторона) -->
-    <div class="w-full lg:w-7/12 p-8 flex justify-center items-start overflow-auto bg-slate-850">
-      <div class="origin-top scale-75 xl:scale-90 shadow-2xl rounded-sm overflow-hidden">
+    <!-- Область предпросмотра А4 (Центрирование и масштабирование) -->
+    <div class="w-full lg:w-7/12 p-4 sm:p-8 flex justify-center items-start overflow-auto bg-gray-950 min-h-[500px]">
+      <div class="origin-top scale-50 sm:scale-75 xl:scale-90 shadow-2xl rounded-lg overflow-hidden border border-gray-800">
         <!-- А4 Бланк -->
         <div id="print-area">
           <!-- Ценники генерируются здесь -->
@@ -143,26 +154,30 @@
 
   </div>
 
-  <!-- Модальное окно выбора кастомных иконок -->
-  <div id="icon-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl">
+  <!-- Модальное окно выбора кастомных иконок из GitHub -->
+  <div id="icon-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in">
+    <div class="bg-gray-900 border border-gray-800 rounded-2xl max-w-sm w-full p-5 shadow-2xl transform transition-all">
       <div class="flex justify-between items-center mb-4">
-        <h3 class="text-base font-bold text-white uppercase tracking-wider">Выбор изображения</h3>
-        <button onclick="closeModal()" class="text-slate-400 hover:text-white text-xl font-bold cursor-pointer">&times;</button>
+        <h3 class="text-sm font-bold text-white uppercase tracking-wider">Выберите иконку</h3>
+        <button onclick="closeModal()" class="text-gray-400 hover:text-white text-xl font-bold cursor-pointer p-1">&times;</button>
       </div>
-      <div id="modal-grid" class="grid grid-cols-4 gap-3 my-4">
+      <div id="modal-grid" class="grid grid-cols-3 gap-3 my-2 max-h-64 overflow-y-auto pr-1">
         <!-- Заполняется динамически -->
       </div>
     </div>
   </div>
   <script>
-    // Массивы файлов иконок, которые лежат в вашем репозитории GitHub
-    const ICON_DATABASE = {
-      drink: ['water.png', 'juice.png', 'cola.png', 'soda.png', 'energy_can.png'],
-      snack: ['chocolate.png', 'chips.png', 'candy.png', 'cookies.png', 'donut.png']
+    // НАСТРОЙКА СВЯЗИ С ВАШИМ GITHUB:
+    const GITHUB_USER = "ВАШ_ЛОГИН_НА_GITHUB"; 
+    const GITHUB_REPO = "ИМЯ_РЕПОЗИТОРИЯ";     
+
+    // Автоматическая база данных для подгрузки картинок
+    let ICON_DATABASE = {
+      drink: [],
+      snack: []
     };
 
-    // Встроенные SVG-заглушки в стиле оригинального макета
+    // Встроенные качественные SVG-заглушки (если картинок в репо еще нет)
     const EMBEDDED_SVG = {
       drink: `<svg viewBox="0 0 24 24" class="w-8 h-8 fill-none stroke-white" stroke-width="2"><path d="M10 2h4v3h-4zM7 9v11a2 2 0 002 2h6a2 2 0 002-2V9M7 9px l5-4 5 4"/></svg>`,
       snack: `<svg viewBox="0 0 24 24" class="w-8 h-8 fill-none stroke-white" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 9h16M4 15h16"/></svg>`,
@@ -171,16 +186,38 @@
       lightning: `<svg viewBox="0 0 24 24" class="w-5 h-5 fill-amber-400 stroke-amber-400"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>`
     };
 
-    // Стартовый набор данных (из вашего примера: Monster, Cola, KitKat...)
+    // Начальный список товаров
     let products = [
-      { id: 1, name: 'Monster 0.33\nв расс', price: '300', category: 'drink', icon: 'energy_can.png', isEnergy: true },
-      { id: 2, name: 'Coca Cola 0.33', price: '250', category: 'drink', icon: 'cola.png', isEnergy: false },
-      { id: 3, name: 'Kit Kat', price: '150', category: 'snack', icon: 'chocolate.png', isEnergy: false }
+      { id: 1, name: 'Monster 0.33\nв расс', price: '300', category: 'drink', icon: '', isEnergy: true },
+      { id: 2, name: 'Coca Cola 0.33', price: '250', category: 'drink', icon: '', isEnergy: false },
+      { id: 3, name: 'Kit Kat', price: '150', category: 'snack', icon: '', isEnergy: false }
     ];
 
     let currentEditingId = null;
 
-    window.addEventListener('DOMContentLoaded', () => {
+    // Автоматическое сканирование репозитория GitHub Pages
+    async function scanGitHubIcons() {
+      const categories = ['drink', 'snack'];
+      for (const cat of categories) {
+        const folderName = cat === 'drink' ? 'drinks' : 'snacks';
+        const url = `https://github.com{GITHUB_USER}/${GITHUB_REPO}/contents/icons/${folderName}`;
+        
+        try {
+          const response = await fetch(url);
+          if (response.ok) {
+            const files = await response.json();
+            ICON_DATABASE[cat] = files
+              .filter(file => file.type === 'file' && /\.(png|jpg|jpeg|svg|webp)$/i.test(file.name))
+              .map(file => file.name);
+          }
+        } catch (e) {
+          console.error("Ошибка при чтении папки картинок: ", e);
+        }
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      await scanGitHubIcons();
       render();
     });
 
@@ -188,50 +225,50 @@
       renderControls();
       renderTiles();
     }
-    // Генерация элементов управления (левая колонка)
+    // Рендер стильного списка товаров (iOS-like дизайн)
     function renderControls() {
       const container = document.getElementById('editor-rows');
       container.innerHTML = '';
 
       products.forEach(p => {
         const div = document.createElement('div');
-        div.className = "bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-3 relative group";
+        div.className = "bg-gray-800/60 border border-gray-800 rounded-2xl p-4 space-y-3 relative transition-all hover:border-gray-700";
         
         div.innerHTML = `
-          <button onclick="deleteProduct(${p.id})" class="absolute top-3 right-3 text-slate-500 hover:text-red-400 transition-colors cursor-pointer text-sm">🗑️</button>
+          <button onclick="deleteProduct(${p.id})" class="absolute top-4 right-4 text-gray-500 hover:text-red-400 transition-colors cursor-pointer text-sm" title="Удалить товар">🗑️</button>
           
-          <div class="grid grid-cols-2 gap-2">
+          <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="text-[10px] uppercase text-slate-400 block mb-1">Тип товара</label>
-              <select onchange="updateProduct(${p.id}, 'category', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs font-sans text-white focus:outline-none focus:border-yellow-500 cursor-pointer">
+              <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Категория</label>
+              <select onchange="updateProduct(${p.id}, 'category', this.value)" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2 text-xs text-white focus:outline-none focus:border-yellow-500 cursor-pointer">
                 <option value="drink" ${p.category === 'drink' ? 'selected' : ''}>🥤 Напиток</option>
-                <option value="snack" ${p.category === 'snack' ? 'selected' : ''}>🍫 Снек / Сладость</option>
+                <option value="snack" ${p.category === 'snack' ? 'selected' : ''}>🍫 Снек</option>
               </select>
             </div>
             <div>
-              <label class="text-[10px] uppercase text-slate-400 block mb-1">Иконка</label>
-              <button onclick="openModal(${p.id})" class="w-full bg-slate-900 border border-slate-700 hover:border-slate-600 rounded-lg p-2 text-xs font-sans text-left text-slate-300 flex items-center justify-between cursor-pointer">
-                <span class="truncate">${p.icon || 'По умолчанию'}</span>
+              <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Изображение</label>
+              <button onclick="openModal(${p.id})" class="w-full bg-gray-900 border border-gray-700 hover:bg-gray-850 rounded-xl p-2 text-xs text-left text-gray-300 flex items-center justify-between cursor-pointer">
+                <span class="truncate pr-1">${p.icon || 'По умолчанию'}</span>
                 <span>🖼️</span>
               </button>
             </div>
           </div>
 
           <div>
-            <label class="text-[10px] uppercase text-slate-400 block mb-1">Название позиции</label>
-            <textarea oninput="updateProduct(${p.id}, 'name', this.value)" rows="2" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs font-sans text-white focus:outline-none focus:border-yellow-500 resize-none" placeholder="Пример: Monster 0.33&#10;в ассортименте">${p.name}</textarea>
+            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Название на ценнике</label>
+            <input type="text" value="${p.name}" oninput="updateProduct(${p.id}, 'name', this.value)" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2 text-xs text-white focus:outline-none focus:border-yellow-500" placeholder="Например: Monster 0.33">
           </div>
 
           <div class="flex items-center justify-between gap-4 pt-1">
             <div class="flex items-center gap-2">
-              <label class="text-[10px] uppercase text-slate-400 font-sans">Цена (₽):</label>
-              <input type="text" value="${p.price}" oninput="updateProduct(${p.id}, 'price', this.value)" class="w-20 bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-center text-xs font-bold text-yellow-400 focus:outline-none focus:border-yellow-500">
+              <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Цена (₽):</label>
+              <input type="number" value="${p.price}" oninput="updateProduct(${p.id}, 'price', this.value)" class="w-20 bg-gray-900 border border-gray-700 rounded-xl p-1.5 text-center text-xs font-bold text-yellow-400 focus:outline-none focus:border-yellow-500">
             </div>
 
             ${p.category === 'drink' ? `
-              <label class="inline-flex items-center gap-2 text-xs font-sans text-slate-300 cursor-pointer select-none">
-                <input type="checkbox" ${p.isEnergy ? 'checked' : ''} onchange="updateProduct(${p.id}, 'isEnergy', this.checked)" class="rounded bg-slate-900 border-slate-700 text-yellow-500 focus:ring-0 w-4 h-4">
-                <span>⚡ Молния (Энергетик)</span>
+              <label class="inline-flex items-center gap-2 text-xs text-gray-300 cursor-pointer select-none">
+                <input type="checkbox" ${p.isEnergy ? 'checked' : ''} onchange="updateProduct(${p.id}, 'isEnergy', this.checked)" class="rounded bg-gray-900 border-gray-700 text-yellow-500 focus:ring-0 w-4 h-4">
+                <span class="text-xs text-gray-400">⚡ Энергетик</span>
               </label>
             ` : ''}
           </div>
@@ -239,7 +276,7 @@
         container.appendChild(div);
       });
     }
-    // Рендер финальных темных ценников на А4 (правая сторона)
+    // Рендер темных ценников на А4
     function renderTiles() {
       const grid = document.getElementById('print-area');
       grid.innerHTML = '';
@@ -248,23 +285,21 @@
         const tile = document.createElement('div');
         tile.className = "figma-tag";
 
-        // Разделение строк названия для красивого переноса
         const formattedName = (p.name || 'Товар').replace(/\n/g, '<br>');
+        const folderName = p.category === 'drink' ? 'drinks' : 'snacks';
 
-        // Логика отображения левой верхней иконки
         let mainIconHtml = EMBEDDED_SVG[p.category];
         if (p.icon) {
-          mainIconHtml = `<img src="icons/${p.category}s/${p.icon}" class="w-9 h-9 object-contain" onerror="this.outerHTML='${EMBEDDED_SVG[p.category]}'">`;
+          mainIconHtml = `<img src="icons/${folderName}/${p.icon}" class="w-9 h-9 object-contain" onerror="this.outerHTML='${EMBEDDED_SVG[p.category]}'">`;
         }
 
-        // Логика отображения нижних функциональных иконок
         const bottomActionIcon = p.category === 'drink' ? EMBEDDED_SVG.vendor : EMBEDDED_SVG.wrench;
         const energyIconHtml = (p.category === 'drink' && p.isEnergy) ? EMBEDDED_SVG.lightning : '';
 
         tile.innerHTML = `
           <div class="flex items-start gap-3.5 z-10">
             <div class="flex-shrink-0 mt-0.5">${mainIconHtml}</div>
-            <div class="text-[17px] font-black uppercase tracking-tight leading-[1.1] text-white">
+            <div class="text-[17px] font-black uppercase tracking-tight leading-[1.1] text-white figma-font">
               ${formattedName}
             </div>
           </div>
@@ -275,7 +310,7 @@
               <div class="opacity-90">${bottomActionIcon}</div>
             </div>
             
-            <div class="price-badge">
+            <div class="price-badge figma-font">
               <span>${p.price || '0'}</span>
               <span class="text-xs font-black ml-1 uppercase">руб.</span>
             </div>
@@ -284,7 +319,7 @@
         grid.appendChild(tile);
       });
     }
-    // Системные функции управления данными
+    // Функции добавления, удаления и обновления
     function addProduct() {
       const newId = products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
       products.push({
@@ -315,7 +350,7 @@
       }
     }
 
-    // Новая логика: Модалка показывает только то, что реально нашлось на GitHub
+    // Модальное окно выбора изображений из репозитория
     function openModal(id) {
       currentEditingId = id;
       const p = products.find(prod => prod.id === id);
@@ -326,15 +361,15 @@
       const folderName = p.category === 'drink' ? 'drinks' : 'snacks';
 
       if (!list || list.length === 0) {
-        grid.innerHTML = `<p class="col-span-4 text-xs text-slate-500 text-center py-4 font-sans">Папка icons/${folderName} пуста или не найдена в репозитории</p>`;
+        grid.innerHTML = `<p class="col-span-3 text-[11px] text-gray-500 text-center py-6">Папка icons/${folderName} пуста или не найдена</p>`;
       } else {
         list.forEach(filename => {
           const btn = document.createElement('button');
-          btn.className = "p-2 border border-slate-700 bg-slate-950 rounded-xl hover:border-yellow-500 flex flex-col items-center justify-center cursor-pointer transition-all";
+          btn.className = "p-2 border border-gray-800 bg-gray-950 rounded-xl hover:border-yellow-500 flex flex-col items-center justify-center cursor-pointer transition-all active:scale-95";
           btn.onclick = () => selectIcon(filename);
           btn.innerHTML = `
-            <img src="icons/${folderName}/${filename}" class="w-10 h-10 object-contain mb-1" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://w3.org\' width=\'24\' height=\'24\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'white\' stroke-width=\'2\'><rect width=\'20\' height=\'20\' x=\'2\' y=\'2\' rx=\'2\'/><circle cx=\'9\' cy=\'9\' r=\'2\'/><path d=\'m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21\'/></svg>'">
-            <span class="text-[9px] text-slate-500 truncate w-full text-center font-sans">${filename}</span>
+            <img src="icons/${folderName}/${filename}" class="w-8 h-8 object-contain mb-1" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://w3.org\' width=\'24\' height=\'24\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'white\' stroke-width=\'2\'><rect width=\'20\' height=\'20\' x=\'2\' y=\'2\' rx=\'2\'/><circle cx=\'9\' cy=\'9\' r=\'2\'/><path d=\'m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21\'/></svg>'">
+            <span class="text-[9px] text-gray-500 truncate w-full text-center">${filename}</span>
           `;
           grid.appendChild(btn);
         });
@@ -355,12 +390,12 @@
       }
     }
 
-    // Экспорт А4 бланка в файл PDF высокого разрешения (масштаб х4)
+    // Печать А4 в PDF
     function exportPDF() {
       const element = document.getElementById('print-area');
       const opt = {
         margin:       0,
-        filename:     'figma_price_tags.pdf',
+        filename:     'price_tags.pdf',
         image:        { type: 'jpeg', quality: 1.0 },
         html2canvas:  { scale: 4, useCORS: true, backgroundColor: '#ffffff' },
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
