@@ -315,7 +315,7 @@
       }
     }
 
-    // Логика работы модального окна выбора изображений из GitHub
+    // Новая логика: Модалка показывает только то, что реально нашлось на GitHub
     function openModal(id) {
       currentEditingId = id;
       const p = products.find(prod => prod.id === id);
@@ -323,16 +323,22 @@
       grid.innerHTML = '';
 
       const list = ICON_DATABASE[p.category];
-      list.forEach(filename => {
-        const btn = document.createElement('button');
-        btn.className = "p-2 border border-slate-700 bg-slate-950 rounded-xl hover:border-yellow-500 flex flex-col items-center justify-center cursor-pointer transition-all";
-        btn.onclick = () => selectIcon(filename);
-        btn.innerHTML = `
-          <img src="icons/${p.category}s/${filename}" class="w-10 h-10 object-contain mb-1" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://w3.org\' width=\'24\' height=\'24\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'white\' stroke-width=\'2\'><rect width=\'20\' height=\'20\' x=\'2\' y=\'2\' rx=\'2\'/><circle cx=\'9\' cy=\'9\' r=\'2\'/><path d=\'m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21\'/></svg>'">
-          <span class="text-[9px] text-slate-500 truncate w-full text-center font-sans">${filename}</span>
-        `;
-        grid.appendChild(btn);
-      });
+      const folderName = p.category === 'drink' ? 'drinks' : 'snacks';
+
+      if (!list || list.length === 0) {
+        grid.innerHTML = `<p class="col-span-4 text-xs text-slate-500 text-center py-4 font-sans">Папка icons/${folderName} пуста или не найдена в репозитории</p>`;
+      } else {
+        list.forEach(filename => {
+          const btn = document.createElement('button');
+          btn.className = "p-2 border border-slate-700 bg-slate-950 rounded-xl hover:border-yellow-500 flex flex-col items-center justify-center cursor-pointer transition-all";
+          btn.onclick = () => selectIcon(filename);
+          btn.innerHTML = `
+            <img src="icons/${folderName}/${filename}" class="w-10 h-10 object-contain mb-1" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://w3.org\' width=\'24\' height=\'24\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'white\' stroke-width=\'2\'><rect width=\'20\' height=\'20\' x=\'2\' y=\'2\' rx=\'2\'/><circle cx=\'9\' cy=\'9\' r=\'2\'/><path d=\'m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21\'/></svg>'">
+            <span class="text-[9px] text-slate-500 truncate w-full text-center font-sans">${filename}</span>
+          `;
+          grid.appendChild(btn);
+        });
+      }
 
       document.getElementById('icon-modal').classList.remove('hidden');
     }
