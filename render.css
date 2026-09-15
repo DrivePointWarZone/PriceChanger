@@ -1,4 +1,3 @@
-/* Подключаем ваш кастомный шрифт из корня гитхаба/проекта */
 @font-face {
     font-family: 'DDTHv-Regular';
     src: url('DDTHv-Regular.woff2') format('woff2');
@@ -7,23 +6,22 @@
     font-display: block;
 }
 
-/* Сетка ценников при экспорте */
+/* Сетка для генерации */
 .tag-grid {
     display: grid;
-    grid-template-columns: repeat(3, 800px); /* Четкое разрешение под печать/экспорт */
-    gap: 20px;
-    padding: 20px;
+    grid-template-columns: repeat(3, 800px); /* 3 ценника в ряд в итоговом файле */
+    gap: 0px; 
     background-color: #000000;
+    padding: 0px;
 }
 
-/* Отдельная карточка ценника */
+/* Карточка ценника на основе вашего готового изображения */
 .single-tag {
     width: 800px;
-    height: 533px; /* Пропорция 3:2 как на макете */
-    background-color: #000000;
-    background-image: url('bg-frame.png'); /* Постоянный задник из репозитория */
-    background-size: cover;
-    background-position: center;
+    height: 533px;
+    background-image: url('bg-frame.png'); /* Цельный фон из Figma */
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
     position: relative;
     box-sizing: border-box;
     font-family: 'DDTHv-Regular', sans-serif;
@@ -31,84 +29,74 @@
     overflow: hidden;
 }
 
-/* Верхняя строка: Иконка товара + Название */
+/* Зона названия и кастомной иконки товара (сверху) */
 .tag-header-zone {
     position: absolute;
-    top: 55px;
-    left: 65px;
-    right: 65px;
-    display: flex;
-    align-items: center;
-    gap: 30px;
-}
-
-.tag-product-icon {
-    width: 90px;
-    height: 90px;
-    object-fit: contain;
-}
-
-.tag-title-block {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
-
-.tag-title-text {
-    font-size: 56px;
-    line-height: 1.1;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-/* Нижняя строка: Технические иконки + Цена */
-.tag-bottom-zone {
-    position: absolute;
-    bottom: 60px;
-    left: 65px;
-    right: 65px;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-}
-
-/* Блок вспомогательных иконок (слева внизу) */
-.tag-meta-icons {
+    top: 50px;
+    left: 60px;
+    right: 60px;
     display: flex;
     align-items: center;
     gap: 25px;
-    height: 100px;
+}
+
+.tag-product-icon {
+    width: 95px;
+    height: 95px;
+    object-fit: contain;
+}
+
+.tag-title-text {
+    font-size: 54px;
+    line-height: 1.1;
+    text-transform: uppercase;
+}
+
+/* Нижняя зона: Фиксированные маркеры типов и Цена */
+.tag-bottom-zone {
+    position: absolute;
+    bottom: 55px;
+    left: 60px;
+    right: 65px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Контейнер для технических иконок слева внизу */
+.tag-meta-icons {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    height: 110px;
 }
 
 .icon-energy {
-    width: 65px;
+    width: 60px;
     height: 95px;
     object-fit: contain;
 }
 
 .icon-type-marker {
     width: 85px;
-    height: 95px;
+    height: 100px;
     object-fit: contain;
 }
 
-/* Желтая плашка цены */
-.tag-price-badge {
-    background-image: url('price-brush.png'); /* Желтый мазок-фон из фигмы */
-    background-size: 100% 100%;
-    background-repeat: no-repeat;
-    padding: 20px 60px;
+/* Контейнер цены — позиционируется ровно поверх вашей желтой плашки */
+.tag-price-container {
+    width: 375px;
+    height: 125px;
     display: flex;
     align-items: center;
     justify-content: center;
-    min-width: 380px;
-    height: 130px;
 }
 
 .tag-price-value {
-    font-size: 82px;
-    color: #000000;
+    font-size: 80px;
+    color: #000000; /* Черный текст поверх желтого фона */
     font-weight: bold;
     line-height: 1;
     white-space: nowrap;
+    text-align: center;
 }
