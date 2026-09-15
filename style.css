@@ -11,6 +11,7 @@
   font-family: 'DDTHv-Regular', 'Impact', 'Arial Black', sans-serif;
 }
 
+/* Печатный лист А4 */
 #print-area {
   width: 210mm;
   min-height: 297mm;
@@ -22,6 +23,7 @@
   box-sizing: border-box;
 }
 
+/* Черный ценник по Figma-макету */
 .figma-tag {
   width: 100%;
   aspect-ratio: 1.58 / 1;
@@ -37,6 +39,7 @@
   overflow: hidden;
 }
 
+/* Элементы граффити в углах */
 .figma-tag::before {
   content: "";
   position: absolute;
@@ -58,6 +61,7 @@
   transform: skewX(-30deg);
 }
 
+/* Желтая подложка цены */
 .price-badge {
   background-color: #f2cc07;
   color: #000000;
