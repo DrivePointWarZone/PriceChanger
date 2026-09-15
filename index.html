@@ -7,63 +7,93 @@
     <link rel="preconnect" href="https://googleapis.com">
     <link rel="preconnect" href="https://gstatic.com" crossorigin>
     <link href="https://googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-    <!-- Подключаем html2canvas строго через надежный CDN -->
     <script src="https://jsdelivr.net"></script>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="render.css">
-</head>
-<body>
+    
+    <style>
+        /* ==================== СТИЛИ ИНТЕРФЕЙСА САЙТА ==================== */
+        :root {
+            --bg-main: #0d0d11;
+            --bg-card: #14141c;
+            --bg-input: #1d1d26;
+            --accent: #f5c518;
+            --text: #ffffff;
+            --muted: #7c7c93;
+            --border: #2c2c3c;
+            --success: #00e676;
+            --danger: #ff1744;
+        }
 
-    <header class="app-header">
-        <div class="logo">⚡ TAG.GEN</div>
-        <button id="export-btn" class="btn btn-primary">Скачать PNG</button>
-    </header>
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
-    <main class="app-container">
-        <!-- Блок синхронизации -->
-        <section class="card">
-            <div class="card-header">Синхронизация GitHub</div>
-            <div class="card-body">
-                <div class="input-group">
-                    <label>Репозиторий (username/repo)</label>
-                    <input type="text" id="gh-repo" placeholder="user/my-assets-repo">
-                </div>
-                <div class="input-group">
-                    <label>Токен доступа (Token)</label>
-                    <input type="password" id="gh-token" placeholder="ghp_xxxxxxxxxxxx">
-                </div>
-                <button id="sync-btn" class="btn btn-secondary">Обновить ассеты</button>
-            </div>
-        </section>
+        body {
+            background-color: var(--bg-main);
+            color: var(--text);
+            font-family: 'JetBrains Mono', monospace;
+            padding: 80px 16px 40px 16px;
+            display: flex;
+            justify-content: center;
+        }
 
-        <!-- Конструктор товаров -->
-        <section class="card">
-            <div class="card-header">
-                <span>Список товаров</span>
-                <button id="add-item-btn" class="btn btn-sm btn-success">+ Добавить</button>
-            </div>
-            <div id="items-list" class="items-list">
-                <!-- Строки генерируются в JS -->
-            </div>
-        </section>
-    </main>
+        .app-container { width: 100%; max-width: 500px; display: flex; flex-direction: column; gap: 20px; }
 
-    <!-- Попап выбора иконок -->
-    <div id="icon-modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Выберите иконку</h3>
-                <button id="close-modal-btn" class="close-btn">&times;</button>
-            </div>
-            <div id="icons-grid" class="icons-grid"></div>
-        </div>
-    </div>
+        .card { background-color: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
 
-    <!-- Скрытый контейнер для генерации картинки -->
-    <div class="render-overflow-container">
-        <div id="price-tag-render-area" class="tag-grid"></div>
-    </div>
+        .card-header {
+            padding: 16px; background: rgba(255,255,255,0.02); border-bottom: 1px solid var(--border);
+            font-weight: 700; display: flex; justify-content: space-between; align-items: center;
+        }
 
-    <script src="app.js"></script>
-</body>
-</html>
+        .card-body { padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+        .input-group { display: flex; flex-direction: column; gap: 6px; }
+        label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+        input, select {
+            background-color: var(--bg-input); border: 1px solid var(--border); color: #fff;
+            padding: 14px; border-radius: 12px; font-family: inherit; font-size: 14px; outline: none; transition: border 0.2s;
+        }
+        input:focus, select:focus { border-color: var(--accent); }
+
+        .app-header {
+            position: fixed; top: 0; left: 0; right: 0; height: 65px;
+            background: rgba(20, 20, 28, 0.9); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between;
+            padding: 0 16px; z-index: 100;
+        }
+
+        .logo { font-weight: 700; font-size: 18px; color: var(--accent); }
+
+        .btn { padding: 12px 24px; border-radius: 12px; border: none; font-family: inherit; font-weight: 700; cursor: pointer; transition: opacity 0.2s; }
+        .btn:active { opacity: 0.8; }
+        .btn-primary { background: var(--accent); color: #000; }
+        .btn-secondary { background: var(--bg-input); color: #fff; border: 1px solid var(--border); }
+        .btn-success { background: var(--success); color: #000; }
+        .btn-danger { background: var(--danger); color: #fff; }
+        .btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 8px; }
+
+        .item-row { padding: 20px 16px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 14px; }
+        .item-row:last-child { border-bottom: none; }
+        .item-row-header { display: flex; justify-content: space-between; align-items: center; }
+        .item-main-fields { display: grid; grid-template-columns: 2fr 1fr; gap: 12px; }
+        .item-selectors { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+        .btn-icon-select {
+            background: var(--bg-input); border: 1px solid var(--border); color: #fff;
+            border-radius: 12px; padding: 12px; text-align: left; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+
+        .checkbox-wrapper { display: flex; align-items: center; gap: 10px; font-size: 13px; cursor: pointer; user-select: none; color: var(--muted); }
+        .checkbox-wrapper input { width: 16px; height: 16px; accent-color: var(--accent); }
+
+        /* Попап выбора иконок (iOS-style drawer) */
+        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); z-index: 200; align-items: flex-end; }
+        .modal.open { display: flex; }
+        .modal-content { background: var(--bg-card); width: 100%; border-top-left-radius: 24px; border-top-right-radius: 24px; padding: 20px; max-height: 70vh; overflow-y: auto; border-top: 1px solid var(--border); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .close-btn { background: none; border: none; color: var(--muted); font-size: 28px; cursor: pointer; }
+        .icons-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+        .icon-grid-item { background: var(--bg-input); border: 1px solid var(--border); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; align-items: center; cursor: pointer; }
+        .icon-grid-item:active { border-color: var(--accent); }
+        .icon-grid-item img { max-width: 100%; height: 50px; object-fit: contain; }
+        .icon-grid-item span { font-size: 10px; color: var(--muted); margin-top: 6px; text-align: center; width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        .render-overflow-container { position: absolute; left: -9999px; top: -9999px; }
