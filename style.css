@@ -1,7 +1,5 @@
-/* Импорт полноценного Tailwind CSS */
 @import url('https://cloudflare.com');
 
-/* Подключение шрифта из репозитория */
 @font-face {
   font-family: 'DDTHv-Regular';
   src: url('fonts/DDTHv-Regular.woff2') format('woff2');
@@ -13,7 +11,6 @@
   font-family: 'DDTHv-Regular', 'Impact', 'Arial Black', sans-serif;
 }
 
-/* Сетка печатного листа А4 */
 #print-area {
   width: 210mm;
   min-height: 297mm;
@@ -25,7 +22,6 @@
   box-sizing: border-box;
 }
 
-/* Черный ценник строго по Figma макету */
 .figma-tag {
   width: 100%;
   aspect-ratio: 1.58 / 1;
@@ -41,7 +37,6 @@
   overflow: hidden;
 }
 
-/* Граффити-штрихи в углах */
 .figma-tag::before {
   content: "";
   position: absolute;
@@ -52,6 +47,7 @@
   border-bottom: 1px solid rgba(255,255,255,0.6);
   transform: skewX(-30deg);
 }
+
 .figma-tag::after {
   content: "";
   position: absolute;
@@ -62,7 +58,6 @@
   transform: skewX(-30deg);
 }
 
-/* Желтая подложка цены */
 .price-badge {
   background-color: #f2cc07;
   color: #000000;
@@ -77,7 +72,6 @@
   position: relative;
 }
 
-/* Скрытие стрелок числового инпута */
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
   -webkit-appearance: none;
@@ -87,7 +81,6 @@ input[type="number"] {
   -moz-appearance: textfield;
 }
 
-/* Кастомный скроллбар для интерфейса */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: #0f172a; }
 ::-webkit-scrollbar-thumb { background: #334155; border-radius: 99px; }
