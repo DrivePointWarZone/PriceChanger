@@ -4,16 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Редактор ценников</title>
-  <!-- Подключаем наш внешний файл стилей -->
   <link rel="stylesheet" href="style.css">
-  <!-- Библиотека генерации PDF -->
   <script src="https://cloudflare.com"></script>
 </head>
 <body class="bg-gray-950 text-gray-100 min-h-screen font-sans antialiased">
 
   <div class="flex flex-col lg:flex-row min-h-screen">
     
-    <!-- Панель настроек (Адаптив под Айфон) -->
+    <!-- Панель управления -->
     <div class="w-full lg:w-5/12 bg-gray-900 p-4 sm:p-6 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-gray-800 shadow-2xl z-20">
       <div>
         <div class="flex items-center justify-between mb-6 sm:mb-8">
@@ -21,7 +19,7 @@
             <h1 class="text-xl font-bold tracking-tight text-white">Редактор ценников</h1>
             <p class="text-xs text-gray-400">Управление позициями на листе А4</p>
           </div>
-          <button onclick="exportPDF()" class="bg-yellow-500 hover:bg-yellow-400 text-gray-950 px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider shadow-lg shadow-yellow-500/10 transition-all cursor-pointer">
+          <button onclick="exportPDF()" class="bg-yellow-500 hover:bg-yellow-400 text-gray-950 px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all cursor-pointer">
             Скачать PDF
           </button>
         </div>
@@ -44,7 +42,7 @@
       </div>
     </div>
 
-    <!-- Область бланка А4 -->
+    <!-- Область А4 бланка -->
     <div class="w-full lg:w-7/12 p-4 sm:p-8 flex justify-center items-start overflow-auto bg-gray-950 min-h-[500px]">
       <div class="origin-top scale-50 sm:scale-75 xl:scale-90 shadow-2xl rounded-lg overflow-hidden border border-gray-800">
         <div id="print-area">
@@ -55,7 +53,7 @@
 
   </div>
 
-  <!-- Модалка выбора картинок -->
+  <!-- Модалка выбора кастомных картинок -->
   <div id="icon-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50">
     <div class="bg-gray-900 border border-gray-800 rounded-2xl max-w-sm w-full p-5 shadow-2xl">
       <div class="flex justify-between items-center mb-4">
@@ -82,7 +80,13 @@
 
     let currentEditingId = null;
 
-    // Сканирование репозитория
+    // Встроенный SVG-код для нижних значков (автомат, ключ, молния), чтобы они работали всегда
+    const HARDCODED_SVG = {
+      vendor: `<svg viewBox="0 0 24 24" class="w-6 h-6 fill-none stroke-white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M5 9h14M9 6h2M9 13h6v5H9z"/></svg>`,
+      wrench: `<svg viewBox="0 0 24 24" class="w-6 h-6 fill-none stroke-white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a5 5 0 0 0-7.4 0l-3.6 3.6a1 1 0 0 0 0 1.4l2.2 2.2a1 1 0 0 0 1.4 0l1.5-1.5 4.3 4.3-1.5 1.5a1 1 0 0 0 0 1.4l2.2 2.2a1 1 0 0 0 1.4 0l3.6-3.6a5 5 0 0 0 0-7.4l-4.3 4.3-2.2-2.2z"/></svg>`,
+      lightning: `<svg viewBox="0 0 24 24" class="w-5 h-5 fill-current text-yellow-400 stroke-current"><path stroke-width="1" d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>`
+    };
+
     async function scanGitHubIcons() {
       const categories = ['drink', 'snack'];
       for (const cat of categories) {
@@ -105,10 +109,7 @@
       render();
     });
 
-    function render() {
-      renderControls();
-      renderTiles();
-    }
+    function render() { renderControls(); renderTiles(); }
 
     function renderControls() {
       const container = document.getElementById('editor-rows');
@@ -121,13 +122,13 @@
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Категория</label>
-              <select onchange="updateProduct(${p.id}, 'category', this.value)" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2 text-xs text-white focus:outline-none focus:border-yellow-500">
+              <select onchange="updateProduct(${p.id}, 'category', this.value)" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2 text-xs text-white focus:outline-none">
                 <option value="drink" ${p.category === 'drink' ? 'selected' : ''}>🥤 Напиток</option>
-                <option value="snack" ${p.category === 'snack' ? 'selected' : ''}>🍫 Снек</option>
+                <option value="snack" ${p.category === 'snack' ? 'selected' : ''}>🍫 Снек / Сладость</option>
               </select>
             </div>
             <div>
-              <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Изображение</label>
+              <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Кастомное фото</label>
               <button onclick="openModal(${p.id})" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2 text-xs text-left text-gray-300 flex items-center justify-between">
                 <span class="truncate pr-1">${p.icon || 'По умолчанию'}</span>
                 <span>🖼️</span>
@@ -164,15 +165,17 @@
         const formattedName = (p.name || 'Товар').replace(/\n/g, '<br>');
         const folderName = p.category === 'drink' ? 'drinks' : 'snacks';
 
-        // Подгрузка иконок категорий и товаров из правильных папок
-        const mainIconUrl = p.icon ? `icons/${folderName}/${p.icon}` : `icons/categories/${p.category}.png`;
-        const bottomIconUrl = p.category === 'drink' ? `icons/categories/vendor.png` : `icons/categories/wrench.png`;
-        const energyIconHtml = (p.category === 'drink' && p.isEnergy) ? `<img src="icons/categories/lightning.png" class="w-5 h-5 object-contain">` : '';
+        // Главная иконка: если загружен кастомный файл товара, берем его, иначе берем общий `icons/drink.png` или `icons/snack.png`
+        const mainIconUrl = p.icon ? `icons/${folderName}/${p.icon}` : `icons/${p.category}.png`;
+        
+        // Рендер нижних значков (автомат для напитков, гаечный ключ для снеков)
+        const bottomIconSvg = p.category === 'drink' ? HARDCODED_SVG.vendor : HARDCODED_SVG.wrench;
+        const energyIconHtml = (p.category === 'drink' && p.isEnergy) ? HARDCODED_SVG.lightning : '';
 
         tile.innerHTML = `
           <div class="flex items-start gap-3.5 z-10">
             <div class="flex-shrink-0 mt-0.5">
-              <img src="${mainIconUrl}" class="w-9 h-9 object-contain" onerror="this.style.display='none'">
+              <img src="${mainIconUrl}" class="w-9 h-9 object-contain" id="img-${p.id}">
             </div>
             <div class="text-[17px] font-black uppercase tracking-tight leading-[1.1] text-white figma-font">
               ${formattedName}
@@ -181,7 +184,7 @@
           <div class="flex justify-between items-end w-full z-10">
             <div class="flex items-center gap-1.5 pb-1">
               ${energyIconHtml}
-              <img src="${bottomIconUrl}" class="w-6 h-6 object-contain opacity-90" onerror="this.style.display='none'">
+              <div class="opacity-90 flex items-center justify-center">${bottomIconSvg}</div>
             </div>
             <div class="price-badge figma-font">
               <span>${p.price || '0'}</span>
@@ -198,7 +201,6 @@
       render();
     }
     function deleteProduct(id) { products = products.filter(p => p.id !== id); render(); }
-     Orc
     function updateProduct(id, key, value) {
       const p = products.find(prod => prod.id === id);
       if (p) { p[key] = value; if (key === 'category') { p.icon = ''; p.isEnergy = false; } render(); }
@@ -213,15 +215,15 @@
       const folderName = p.category === 'drink' ? 'drinks' : 'snacks';
 
       if (!list || list.length === 0) {
-        grid.innerHTML = `<p class="col-span-3 text-[11px] text-gray-500 text-center py-6">Папка icons/${folderName} пуста</p>`;
+        grid.innerHTML = `<p class="col-span-3 text-[11px] text-gray-500 text-center py-6 font-sans">Папка icons/${folderName} пуста</p>`;
       } else {
         list.forEach(filename => {
           const btn = document.createElement('button');
-          btn.className = "p-2 border border-gray-800 bg-gray-950 rounded-xl hover:border-yellow-500 flex flex-col items-center justify-center transition-all";
+          btn.className = "p-2 border border-gray-800 bg-gray-950 rounded-xl hover:border-yellow-500 flex flex-col items-center justify-center cursor-pointer transition-all";
           btn.onclick = () => { updateProduct(currentEditingId, 'icon', filename); closeModal(); };
           btn.innerHTML = `
             <img src="icons/${folderName}/${filename}" class="w-8 h-8 object-contain mb-1">
-            <span class="text-[9px] text-gray-550 truncate w-full text-center">${filename}</span>
+            <span class="text-[9px] text-gray-500 truncate w-full text-center font-sans">${filename}</span>
           `;
           grid.appendChild(btn);
         });
