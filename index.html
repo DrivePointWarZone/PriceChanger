@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Генератор Ценников Figma Style</title>
+  <!-- Tailwind CSS для интерфейса управления -->
+  <script src="https://jsdelivr.net"></script>
+  <!-- Библиотека html2pdf.js для сохранения А4 -->
+  <script src="https://cloudflare.com"></script>
+  
+  <style>
+    /* Подключение вашего кастомного шрифта */
+    @font-face {
+      font-family: 'DDTHv-Regular';
+      src: url('fonts/DDTHv-Regular.woff2') format('woff2');
+      font-weight: bold;
+      font-style: normal;
+    }
+
+    .figma-font {
+      font-family: 'DDTHv-Regular', 'Impact', 'Arial Black', sans-serif;
+    }
+
+    /* Точные размеры и адаптив печатного листа */
+    #print-area {
+      width: 210mm;
+      min-height: 297mm;
+      background: #ffffff;
+      padding: 20mm 15mm;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10mm;
+      box-sizing: border-box;
+    }
+    /* Стиль ценника строго по вашему референсу */
+    .figma-tag {
+      width: 100%;
+      aspect-ratio: 1.58 / 1;
+      background-color: #0b0b0b;
+      color: #ffffff;
+      border: 2px solid #ffffff;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+
+    /* Граффити-штрихи в углах (имитация по макету) */
+    .figma-tag::before {
+      content: "";
+      position: absolute;
+      top: 6px; right: 0;
+      width: 45px; height: 12px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+      border-top: 2px solid rgba(255,255,255,0.8);
+      border-bottom: 1px solid rgba(255,255,255,0.6);
+      transform: skewX(-30deg);
+    }
+    .figma-tag::after {
+      content: "";
+      position: absolute;
+      bottom: 25px; right: 0;
+      width: 60px; height: 8px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3));
+      border-top: 1px solid rgba(255,255,255,0.5);
+      transform: skewX(-30deg);
+    }
+
+    /* Желтая гранж-подложка для цены */
+    .price-badge {
+      background-color: #f2cc07;
+      color: #000000;
+      padding: 4px 16px;
+      font-size: 24px;
+      font-weight: 900;
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+      transform: rotate(-1deg);
+      box-shadow: 2px 2px 0px #ffffff;
+      position: relative;
+    }
+
+    /* Кастомный скроллбар для эстетики приложения */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #1e293b; }
+    ::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen figma-font">
+
+  <!-- Интерфейс конструктора -->
+  <div class="flex flex-col lg:flex-row min-h-screen">
+    
+    <!-- Панель управления (Левая сторона) -->
+    <div class="w-full lg:w-5/12 bg-slate-900 p-6 flex flex-col justify-between border-r border-slate-800 shadow-xl">
+      <div>
+        <div class="flex items-center justify-between mb-8">
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">⚡</span>
+            <div>
+              <h1 class="text-xl font-black uppercase tracking-wider text-white">BlackTag Pro</h1>
+              <p class="text-xs text-slate-400 font-sans">Конструктор ценников в стиле Figma</p>
+            </div>
+          </div>
+          <button onclick="exportPDF()" class="bg-yellow-500 hover:bg-yellow-400 text-slate-950 px-5 py-2.5 rounded-xl font-bold text-sm tracking-wide shadow-lg shadow-yellow-500/20 transition-all cursor-pointer">
+            Сохранить А4 (PDF)
+          </button>
+        </div>
+
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-sm font-bold uppercase tracking-widest text-slate-400">Позиции на листе</h2>
+          <button onclick="addProduct()" class="bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer">
+            + Добавить
+          </button>
+        </div>
+
+        <!-- Контейнер для строк с товарами -->
+        <div id="editor-rows" class="space-y-3 max-h-[calc(100vh-280px)] overflow-y-auto pr-2">
+          <!-- Рендерится из JS -->
+        </div>
+      </div>
+
+      <div class="mt-6 pt-4 border-t border-slate-800 text-xs text-slate-500 font-sans flex justify-between">
+        <span>Шрифт: DDTHv-Regular.woff2</span>
+        <span>Сетка: А4 (3 в ряд)</span>
+      </div>
+    </div>
+
+    <!-- Область интерактивного просмотра А4 (Правая сторона) -->
+    <div class="w-full lg:w-7/12 p-8 flex justify-center items-start overflow-auto bg-slate-850">
+      <div class="origin-top scale-75 xl:scale-90 shadow-2xl rounded-sm overflow-hidden">
+        <!-- А4 Бланк -->
+        <div id="print-area">
+          <!-- Ценники генерируются здесь -->
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Модальное окно выбора кастомных иконок -->
+  <div id="icon-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-base font-bold text-white uppercase tracking-wider">Выбор изображения</h3>
+        <button onclick="closeModal()" class="text-slate-400 hover:text-white text-xl font-bold cursor-pointer">&times;</button>
+      </div>
+      <div id="modal-grid" class="grid grid-cols-4 gap-3 my-4">
+        <!-- Заполняется динамически -->
+      </div>
+    </div>
+  </div>
+  <script>
+    // Массивы файлов иконок, которые лежат в вашем репозитории GitHub
+    const ICON_DATABASE = {
+      drink: ['water.png', 'juice.png', 'cola.png', 'soda.png', 'energy_can.png'],
+      snack: ['chocolate.png', 'chips.png', 'candy.png', 'cookies.png', 'donut.png']
+    };
+
+    // Встроенные SVG-заглушки в стиле оригинального макета
+    const EMBEDDED_SVG = {
+      drink: `<svg viewBox="0 0 24 24" class="w-8 h-8 fill-none stroke-white" stroke-width="2"><path d="M10 2h4v3h-4zM7 9v11a2 2 0 002 2h6a2 2 0 002-2V9M7 9px l5-4 5 4"/></svg>`,
+      snack: `<svg viewBox="0 0 24 24" class="w-8 h-8 fill-none stroke-white" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 9h16M4 15h16"/></svg>`,
+      vendor: `<svg viewBox="0 0 24 24" class="w-6 h-6 fill-none stroke-white" stroke-width="2"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M5 9h14M9 6h2M9 13h6v5H9z"/></svg>`,
+      wrench: `<svg viewBox="0 0 24 24" class="w-6 h-6 fill-none stroke-white" stroke-width="2"><path d="M14.7 6.3a5 5 0 00-7.4 0l-3.6 3.6a1 1 0 000 1.4l2.2 2.2a1 1 0 001.4 0l1.5-1.5 4.3 4.3-1.5 1.5a1 1 0 000 1.4l2.2 2.2a1 1 0 001.4 0l3.6-3.6a5 5 0 000-7.4l-4.3 4.3-2.2-2.2z"/></svg>`,
+      lightning: `<svg viewBox="0 0 24 24" class="w-5 h-5 fill-amber-400 stroke-amber-400"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>`
+    };
+
+    // Стартовый набор данных (из вашего примера: Monster, Cola, KitKat...)
+    let products = [
+      { id: 1, name: 'Monster 0.33\nв расс', price: '300', category: 'drink', icon: 'energy_can.png', isEnergy: true },
+      { id: 2, name: 'Coca Cola 0.33', price: '250', category: 'drink', icon: 'cola.png', isEnergy: false },
+      { id: 3, name: 'Kit Kat', price: '150', category: 'snack', icon: 'chocolate.png', isEnergy: false }
+    ];
+
+    let currentEditingId = null;
+
+    window.addEventListener('DOMContentLoaded', () => {
+      render();
+    });
+
+    function render() {
+      renderControls();
+      renderTiles();
+    }
+    // Генерация элементов управления (левая колонка)
+    function renderControls() {
+      const container = document.getElementById('editor-rows');
+      container.innerHTML = '';
+
+      products.forEach(p => {
+        const div = document.createElement('div');
+        div.className = "bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-3 relative group";
+        
+        div.innerHTML = `
+          <button onclick="deleteProduct(${p.id})" class="absolute top-3 right-3 text-slate-500 hover:text-red-400 transition-colors cursor-pointer text-sm">🗑️</button>
+          
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-[10px] uppercase text-slate-400 block mb-1">Тип товара</label>
+              <select onchange="updateProduct(${p.id}, 'category', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs font-sans text-white focus:outline-none focus:border-yellow-500 cursor-pointer">
+                <option value="drink" ${p.category === 'drink' ? 'selected' : ''}>🥤 Напиток</option>
+                <option value="snack" ${p.category === 'snack' ? 'selected' : ''}>🍫 Снек / Сладость</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-[10px] uppercase text-slate-400 block mb-1">Иконка</label>
+              <button onclick="openModal(${p.id})" class="w-full bg-slate-900 border border-slate-700 hover:border-slate-600 rounded-lg p-2 text-xs font-sans text-left text-slate-300 flex items-center justify-between cursor-pointer">
+                <span class="truncate">${p.icon || 'По умолчанию'}</span>
+                <span>🖼️</span>
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label class="text-[10px] uppercase text-slate-400 block mb-1">Название позиции</label>
+            <textarea oninput="updateProduct(${p.id}, 'name', this.value)" rows="2" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs font-sans text-white focus:outline-none focus:border-yellow-500 resize-none" placeholder="Пример: Monster 0.33&#10;в ассортименте">${p.name}</textarea>
+          </div>
+
+          <div class="flex items-center justify-between gap-4 pt-1">
+            <div class="flex items-center gap-2">
+              <label class="text-[10px] uppercase text-slate-400 font-sans">Цена (₽):</label>
+              <input type="text" value="${p.price}" oninput="updateProduct(${p.id}, 'price', this.value)" class="w-20 bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-center text-xs font-bold text-yellow-400 focus:outline-none focus:border-yellow-500">
+            </div>
+
+            ${p.category === 'drink' ? `
+              <label class="inline-flex items-center gap-2 text-xs font-sans text-slate-300 cursor-pointer select-none">
+                <input type="checkbox" ${p.isEnergy ? 'checked' : ''} onchange="updateProduct(${p.id}, 'isEnergy', this.checked)" class="rounded bg-slate-900 border-slate-700 text-yellow-500 focus:ring-0 w-4 h-4">
+                <span>⚡ Молния (Энергетик)</span>
+              </label>
+            ` : ''}
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+    // Рендер финальных темных ценников на А4 (правая сторона)
+    function renderTiles() {
+      const grid = document.getElementById('print-area');
+      grid.innerHTML = '';
+
+      products.forEach(p => {
+        const tile = document.createElement('div');
+        tile.className = "figma-tag";
+
+        // Разделение строк названия для красивого переноса
+        const formattedName = (p.name || 'Товар').replace(/\n/g, '<br>');
+
+        // Логика отображения левой верхней иконки
+        let mainIconHtml = EMBEDDED_SVG[p.category];
+        if (p.icon) {
+          mainIconHtml = `<img src="icons/${p.category}s/${p.icon}" class="w-9 h-9 object-contain" onerror="this.outerHTML='${EMBEDDED_SVG[p.category]}'">`;
+        }
+
+        // Логика отображения нижних функциональных иконок
+        const bottomActionIcon = p.category === 'drink' ? EMBEDDED_SVG.vendor : EMBEDDED_SVG.wrench;
+        const energyIconHtml = (p.category === 'drink' && p.isEnergy) ? EMBEDDED_SVG.lightning : '';
+
+        tile.innerHTML = `
+          <div class="flex items-start gap-3.5 z-10">
+            <div class="flex-shrink-0 mt-0.5">${mainIconHtml}</div>
+            <div class="text-[17px] font-black uppercase tracking-tight leading-[1.1] text-white">
+              ${formattedName}
+            </div>
+          </div>
+
+          <div class="flex justify-between items-end w-full z-10">
+            <div class="flex items-center gap-1.5 pb-1">
+              ${energyIconHtml}
+              <div class="opacity-90">${bottomActionIcon}</div>
+            </div>
+            
+            <div class="price-badge">
+              <span>${p.price || '0'}</span>
+              <span class="text-xs font-black ml-1 uppercase">руб.</span>
+            </div>
+          </div>
+        `;
+        grid.appendChild(tile);
+      });
+    }
+    // Системные функции управления данными
+    function addProduct() {
+      const newId = products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
+      products.push({
+        id: newId,
+        name: 'Новый товар 0.33',
+        price: '250',
+        category: 'drink',
+        icon: '',
+        isEnergy: false
+      });
+      render();
+    }
+
+    function deleteProduct(id) {
+      products = products.filter(p => p.id !== id);
+      render();
+    }
+
+    function updateProduct(id, key, value) {
+      const p = products.find(prod => prod.id === id);
+      if (p) {
+        p[key] = value;
+        if (key === 'category') {
+          p.icon = '';
+          p.isEnergy = false;
+        }
+        render();
+      }
+    }
+
+    // Логика работы модального окна выбора изображений из GitHub
+    function openModal(id) {
+      currentEditingId = id;
+      const p = products.find(prod => prod.id === id);
+      const grid = document.getElementById('modal-grid');
+      grid.innerHTML = '';
+
+      const list = ICON_DATABASE[p.category];
+      list.forEach(filename => {
+        const btn = document.createElement('button');
+        btn.className = "p-2 border border-slate-700 bg-slate-950 rounded-xl hover:border-yellow-500 flex flex-col items-center justify-center cursor-pointer transition-all";
+        btn.onclick = () => selectIcon(filename);
+        btn.innerHTML = `
+          <img src="icons/${p.category}s/${filename}" class="w-10 h-10 object-contain mb-1" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://w3.org\' width=\'24\' height=\'24\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'white\' stroke-width=\'2\'><rect width=\'20\' height=\'20\' x=\'2\' y=\'2\' rx=\'2\'/><circle cx=\'9\' cy=\'9\' r=\'2\'/><path d=\'m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21\'/></svg>'">
+          <span class="text-[9px] text-slate-500 truncate w-full text-center font-sans">${filename}</span>
+        `;
+        grid.appendChild(btn);
+      });
+
+      document.getElementById('icon-modal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('icon-modal').classList.add('hidden');
+      currentEditingId = null;
+    }
+
+    function selectIcon(filename) {
+      if (currentEditingId) {
+        updateProduct(currentEditingId, 'icon', filename);
+        closeModal();
+      }
+    }
+
+    // Экспорт А4 бланка в файл PDF высокого разрешения (масштаб х4)
+    function exportPDF() {
+      const element = document.getElementById('print-area');
+      const opt = {
+        margin:       0,
+        filename:     'figma_price_tags.pdf',
+        image:        { type: 'jpeg', quality: 1.0 },
+        html2canvas:  { scale: 4, useCORS: true, backgroundColor: '#ffffff' },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+      html2pdf().set(opt).from(element).save();
+    }
+  </script>
+</body>
+</html>
