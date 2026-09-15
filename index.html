@@ -3,76 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Price Tag Generator</title>
-    <!-- Google Fonts для интерфейса, основной шрифт загрузится через CSS -->
+    <title>Tag Generator Pro</title>
     <link rel="preconnect" href="https://googleapis.com">
     <link rel="preconnect" href="https://gstatic.com" crossorigin>
     <link href="https://googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-    <!-- Подключаем библиотеку для конвертации HTML в PNG -->
-    <script src="https://cloudflare.com"></script>
+    <!-- Подключаем html2canvas строго через надежный CDN -->
+    <script src="https://jsdelivr.net"></script>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="render.css">
 </head>
 <body>
 
-    <!-- Шапка приложения -->
     <header class="app-header">
-        <div class="logo">
-            <span class="icon-flash">⚡</span> TAG.GEN
-        </div>
+        <div class="logo">⚡ TAG.GEN</div>
         <button id="export-btn" class="btn btn-primary">Скачать PNG</button>
     </header>
 
-    <!-- Основной контейнер -->
     <main class="app-container">
-        
-        <!-- Секция настроек GitHub -->
-        <section class="card config-card">
-            <div class="card-header">Синхронизация с GitHub</div>
+        <!-- Блок синхронизации -->
+        <section class="card">
+            <div class="card-header">Синхронизация GitHub</div>
             <div class="card-body">
                 <div class="input-group">
-                    <label for="gh-repo">Репозиторий (username/repo)</label>
-                    <input type="text" id="gh-repo" placeholder="myname/price-tags-assets">
+                    <label>Репозиторий (username/repo)</label>
+                    <input type="text" id="gh-repo" placeholder="user/my-assets-repo">
                 </div>
                 <div class="input-group">
-                    <label for="gh-token">GitHub Token (для приватных/частых запросов)</label>
+                    <label>Токен доступа (Token)</label>
                     <input type="password" id="gh-token" placeholder="ghp_xxxxxxxxxxxx">
                 </div>
                 <button id="sync-btn" class="btn btn-secondary">Обновить ассеты</button>
             </div>
         </section>
 
-        <!-- Список товаров (Конструктор строк) -->
-        <section class="card items-card">
+        <!-- Конструктор товаров -->
+        <section class="card">
             <div class="card-header">
                 <span>Список товаров</span>
                 <button id="add-item-btn" class="btn btn-sm btn-success">+ Добавить</button>
             </div>
             <div id="items-list" class="items-list">
-                <!-- Строки товаров будут создаваться динамически через JS -->
+                <!-- Строки генерируются в JS -->
             </div>
         </section>
-
     </main>
 
-    <!-- Попап для выбора кастомных иконок товаров -->
+    <!-- Попап выбора иконок -->
     <div id="icon-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Выберите иконку товара</h3>
+                <h3>Выберите иконку</h3>
                 <button id="close-modal-btn" class="close-btn">&times;</button>
             </div>
-            <div id="icons-grid" class="icons-grid">
-                <!-- Иконки из гитхаба загрузятся сюда -->
-            </div>
+            <div id="icons-grid" class="icons-grid"></div>
         </div>
     </div>
 
-    <!-- Скрытая зона для рендеринга итогового ценника -->
+    <!-- Скрытый контейнер для генерации картинки -->
     <div class="render-overflow-container">
-        <div id="price-tag-render-area" class="tag-grid">
-            <!-- Сюда JS будет дублировать данные для генерации картинки -->
-        </div>
+        <div id="price-tag-render-area" class="tag-grid"></div>
     </div>
 
     <script src="app.js"></script>
