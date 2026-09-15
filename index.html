@@ -1,273 +1,80 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Редактор ценников</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="https://cloudflare.com"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Price Tag Generator</title>
+    <!-- Google Fonts для интерфейса, основной шрифт загрузится через CSS -->
+    <link rel="preconnect" href="https://googleapis.com">
+    <link rel="preconnect" href="https://gstatic.com" crossorigin>
+    <link href="https://googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Подключаем библиотеку для конвертации HTML в PNG -->
+    <script src="https://cloudflare.com"></script>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="render.css">
 </head>
-<body class="bg-gray-950 text-gray-100 min-h-screen font-sans antialiased">
+<body>
 
-  <div class="flex flex-col lg:flex-row min-h-screen">
-    
-    <!-- Панель управления -->
-    <div class="w-full lg:w-5/12 bg-gray-900 p-4 sm:p-6 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-gray-800 shadow-2xl z-20">
-      <div>
-        <div class="flex items-center justify-between mb-6 sm:mb-8">
-          <div>
-            <h1 class="text-xl font-bold tracking-tight text-white">Редактор ценников</h1>
-            <p class="text-xs text-gray-400">Настройка позиций для печати</p>
-          </div>
-          <button onclick="exportPDF()" class="bg-yellow-500 hover:bg-yellow-400 text-gray-950 px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all shadow-lg shadow-yellow-500/10 cursor-pointer active:scale-95">
-            Скачать PDF
-          </button>
+    <!-- Шапка приложения -->
+    <header class="app-header">
+        <div class="logo">
+            <span class="icon-flash">⚡</span> TAG.GEN
         </div>
+        <button id="export-btn" class="btn btn-primary">Скачать PNG</button>
+    </header>
 
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-xs font-semibold uppercase tracking-widest text-gray-500">Список товаров</h2>
-          <button onclick="addProduct()" class="bg-gray-800 hover:bg-gray-700 text-white px-3 py-1.5 rounded-xl text-xs font-medium flex items-center gap-1 transition-all cursor-pointer">
-            + Добавить товар
-          </button>
-        </div>
-
-        <div id="editor-rows" class="space-y-3 max-h-[50vh] lg:max-h-[calc(100vh-240px)] overflow-y-auto pr-1">
-          <!-- Карточки товаров отрендерит скрипт -->
-        </div>
-      </div>
-
-      <div class="mt-6 pt-4 border-t border-gray-800 text-[11px] text-gray-500 flex justify-between font-mono">
-        <span>Шрифт: DDTHv-Regular</span>
-        <span>Сетка: А4 (3 в ряд)</span>
-      </div>
-    </div>
-
-    <!-- Область А4 бланка -->
-    <div class="w-full lg:w-7/12 p-4 sm:p-8 flex justify-center items-start overflow-auto bg-gray-950 min-h-[500px]">
-      <div class="origin-top scale-50 sm:scale-75 xl:scale-90 shadow-2xl rounded-lg overflow-hidden border border-gray-800">
-        <div id="print-area">
-          <!-- Ценники -->
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- Модалка кастомных изображений -->
-  <div id="icon-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50">
-    <div class="bg-gray-900 border border-gray-800 rounded-2xl max-w-sm w-full p-5 shadow-2xl">
-      <div class="flex justify-between items-center mb-4">
-        <h3 class="text-sm font-bold text-white uppercase tracking-wider">Выберите картинку товара</h3>
-        <button onclick="closeModal()" class="text-gray-400 hover:text-white text-xl font-bold cursor-pointer p-1">&times;</button>
-      </div>
-      <div id="modal-grid" class="grid grid-cols-3 gap-3 my-2 max-h-64 overflow-y-auto pr-1">
-        <!-- Кнопки выбора картинок -->
-      </div>
-    </div>
-  </div>
-  <script>
-    // НАСТРОЙКА СВЯЗИ С ВАШИМ GITHUB:
-    const GITHUB_USER = "ВАШ_ЛОГИН_НА_GITHUB"; 
-    const GITHUB_REPO = "ИМЯ_РЕПОЗИТОРИЯ";     
-
-    let ICON_DATABASE = { drink: [], snack: [] };
-
-    let products = [
-      { id: 1, name: 'Monster 0.33\nв расс', price: '300', category: 'drink', icon: '', isEnergy: true },
-      { id: 2, name: 'Coca Cola 0.33', price: '250', category: 'drink', icon: '', isEnergy: false },
-      { id: 3, name: 'Kit Kat', price: '150', category: 'snack', icon: '', isEnergy: false }
-    ];
-
-    let currentEditingId = null;
-
-    async function scanGitHubIcons() {
-      const categories = ['drink', 'snack'];
-      for (const cat of categories) {
-        const folderName = cat === 'drink' ? 'drinks' : 'snacks';
-        const url = `https://github.com{GITHUB_USER}/${GITHUB_REPO}/contents/icons/${folderName}`;
-        try {
-          const response = await fetch(url);
-          if (response.ok) {
-            const files = await response.json();
-            ICON_DATABASE[cat] = files
-              .filter(file => file.type === 'file' && /\.(png|jpg|jpeg|svg|webp)$/i.test(file.name))
-              .map(file => file.name);
-          }
-        } catch (e) { console.error("Папка на GitHub пуста или не найдена"); }
-      }
-    }
-
-    window.addEventListener('DOMContentLoaded', async () => {
-      await scanGitHubIcons();
-      initControlsLayout();
-      renderTiles();
-    });
-    function initControlsLayout() {
-      const container = document.getElementById('editor-rows');
-      container.innerHTML = '';
-
-      products.forEach(p => {
-        const div = document.createElement('div');
-        div.id = `product-card-${p.id}`;
-        div.className = "bg-gray-800/60 border border-gray-800 rounded-2xl p-4 space-y-3 relative";
+    <!-- Основной контейнер -->
+    <main class="app-container">
         
-        div.innerHTML = `
-          <button onclick="deleteProduct(${p.id})" class="absolute top-4 right-4 text-gray-500 hover:text-red-400 text-sm cursor-pointer">🗑️</button>
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="text-[10px] font-bold text-gray-400 uppercase block mb-1">Категория</label>
-              <select onchange="updateProductData(${p.id}, 'category', this.value)" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2 text-xs text-white focus:outline-none">
-                <option value="drink" ${p.category === 'drink' ? 'selected' : ''}>🥤 Напиток</option>
-                <option value="snack" ${p.category === 'snack' ? 'selected' : ''}>🍫 Снек / Сладость</option>
-              </select>
+        <!-- Секция настроек GitHub -->
+        <section class="card config-card">
+            <div class="card-header">Синхронизация с GitHub</div>
+            <div class="card-body">
+                <div class="input-group">
+                    <label for="gh-repo">Репозиторий (username/repo)</label>
+                    <input type="text" id="gh-repo" placeholder="myname/price-tags-assets">
+                </div>
+                <div class="input-group">
+                    <label for="gh-token">GitHub Token (для приватных/частых запросов)</label>
+                    <input type="password" id="gh-token" placeholder="ghp_xxxxxxxxxxxx">
+                </div>
+                <button id="sync-btn" class="btn btn-secondary">Обновить ассеты</button>
             </div>
-            <div>
-              <label class="text-[10px] font-bold text-gray-400 uppercase block mb-1">Фото товара</label>
-              <button onclick="openModal(${p.id})" id="btn-icon-${p.id}" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2 text-xs text-left text-gray-300 flex items-center justify-between cursor-pointer">
-                <span class="truncate pr-1">${p.icon || 'По умолчанию'}</span>
-                <span>🖼️</span>
-              </button>
+        </section>
+
+        <!-- Список товаров (Конструктор строк) -->
+        <section class="card items-card">
+            <div class="card-header">
+                <span>Список товаров</span>
+                <button id="add-item-btn" class="btn btn-sm btn-success">+ Добавить</button>
             </div>
-          </div>
-          <div>
-            <label class="text-[10px] font-bold text-gray-400 uppercase block mb-1">Название товара</label>
-            <input type="text" value="${p.name}" oninput="updateProductData(${p.id}, 'name', this.value)" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2 text-xs text-white focus:outline-none">
-          </div>
-          <div class="flex items-center justify-between gap-4 pt-1">
-            <div class="flex items-center gap-2">
-              <label class="text-[10px] font-bold text-gray-400 uppercase">Цена (₽):</label>
-              <input type="number" min="0" step="1" value="${p.price}" oninput="updateProductData(${p.id}, 'price', this.value)" class="w-20 bg-gray-900 border border-gray-700 rounded-xl p-1.5 text-center text-xs font-bold text-yellow-400 focus:outline-none">
+            <div id="items-list" class="items-list">
+                <!-- Строки товаров будут создаваться динамически через JS -->
             </div>
-            <div id="energy-box-container-${p.id}">
-              ${p.category === 'drink' ? `
-                <label class="inline-flex items-center gap-2 text-xs text-gray-300 cursor-pointer">
-                  <input type="checkbox" ${p.isEnergy ? 'checked' : ''} onchange="updateProductData(${p.id}, 'isEnergy', this.checked)" class="rounded bg-gray-900 border-gray-700 text-yellow-500 w-4 h-4">
-                  <span class="text-xs text-gray-400">⚡ Энергетик</span>
-                </label>
-              ` : ''}
+        </section>
+
+    </main>
+
+    <!-- Попап для выбора кастомных иконок товаров -->
+    <div id="icon-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Выберите иконку товара</h3>
+                <button id="close-modal-btn" class="close-btn">&times;</button>
             </div>
-          </div>
-        `;
-        container.appendChild(div);
-      });
-    }
-
-    function updateProductData(id, key, value) {
-      const p = products.find(prod => prod.id === id);
-      if (p) {
-        p[key] = value;
-        if (key === 'category') {
-          p.icon = '';
-          p.isEnergy = false;
-          const eContainer = document.getElementById(`energy-box-container-${id}`);
-          if (eContainer) {
-            eContainer.innerHTML = value === 'drink' ? `
-              <label class="inline-flex items-center gap-2 text-xs text-gray-300 cursor-pointer">
-                <input type="checkbox" onchange="updateProductData(${id}, 'isEnergy', this.checked)" class="rounded bg-gray-900 border-gray-700 text-yellow-500 w-4 h-4">
-                <span class="text-xs text-gray-400">⚡ Энергетик</span>
-              </label>
-            ` : '';
-          }
-          const btnIcon = document.getElementById(`btn-icon-${id}`);
-          if (btnIcon) btnIcon.querySelector('span').innerText = 'По умолчанию';
-        }
-        renderTiles();
-      }
-    }
-    function renderTiles() {
-      const grid = document.getElementById('print-area');
-      grid.innerHTML = '';
-
-      products.forEach(p => {
-        const tile = document.createElement('div');
-        tile.className = "figma-tag";
-        const formattedName = (p.name || '').replace(/\n/g, '<br>');
-        const folderName = p.category === 'drink' ? 'drinks' : 'snacks';
-
-        let productIconHtml = '';
-        if (p.icon) {
-          productIconHtml = `<img src="icons/${folderName}/${p.icon}" class="w-9 h-9 object-contain flex-shrink-0" onerror="this.style.display='none'">`;
-        }
-
-        const categoryIconUrl = `icons/categories/${p.category}.png`;
-        const energyIconHtml = (p.category === 'drink' && p.isEnergy) ? `<img src="icons/categories/lightning.png" class="w-5 h-5 object-contain">` : '';
-
-        tile.innerHTML = `
-          <div class="flex items-start gap-3 z-10 w-full">
-            ${productIconHtml}
-            <div class="text-[17px] font-black uppercase tracking-tight leading-[1.1] text-white figma-font break-words w-full">
-              ${formattedName}
+            <div id="icons-grid" class="icons-grid">
+                <!-- Иконки из гитхаба загрузятся сюда -->
             </div>
-          </div>
-          <div class="flex justify-between items-end w-full z-10">
-            <div class="price-badge figma-font">
-              <span>${p.price || '0'}</span>
-              <span class="text-xs font-black ml-1 uppercase">руб.</span>
-            </div>
-            <div class="flex items-center gap-1.5 pb-1">
-              ${energyIconHtml}
-              <img src="${categoryIconUrl}" class="w-6 h-6 object-contain opacity-90" onerror="this.style.visibility='hidden'">
-            </div>
-          </div>
-        `;
-        grid.appendChild(tile);
-      });
-    }
+        </div>
+    </div>
 
-    function addProduct() {
-      products.push({ id: Date.now(), name: 'Новый товар 0.33', price: '250', category: 'drink', icon: '', isEnergy: false });
-      initControlsLayout();
-      renderTiles();
-    }
+    <!-- Скрытая зона для рендеринга итогового ценника -->
+    <div class="render-overflow-container">
+        <div id="price-tag-render-area" class="tag-grid">
+            <!-- Сюда JS будет дублировать данные для генерации картинки -->
+        </div>
+    </div>
 
-    function deleteProduct(id) {
-      products = products.filter(p => p.id !== id);
-      initControlsLayout();
-      renderTiles();
-    }
-
-    function openModal(id) {
-      currentEditingId = id;
-      const p = products.find(prod => prod.id === id);
-      const grid = document.getElementById('modal-grid');
-      grid.innerHTML = '';
-      const list = ICON_DATABASE[p.category];
-      const folderName = p.category === 'drink' ? 'drinks' : 'snacks';
-
-      if (!list || list.length === 0) {
-        grid.innerHTML = `<p class="col-span-3 text-[11px] text-gray-500 text-center py-6 font-sans">Папка icons/${folderName} пуста</p>`;
-      } else {
-        list.forEach(filename => {
-          const btn = document.createElement('button');
-          btn.className = "p-2 border border-gray-800 bg-gray-950 rounded-xl hover:border-yellow-500 flex flex-col items-center justify-center cursor-pointer transition-all";
-          btn.onclick = () => {
-            updateProductData(currentEditingId, 'icon', filename);
-            const btnIcon = document.getElementById(`btn-icon-${currentEditingId}`);
-            if (btnIcon) btnIcon.querySelector('span').innerText = filename;
-            closeModal();
-          };
-          btn.innerHTML = `
-            <img src="icons/${folderName}/${filename}" class="w-8 h-8 object-contain mb-1">
-            <span class="text-[9px] text-gray-400 truncate w-full text-center font-sans">${filename}</span>
-          `;
-          grid.appendChild(btn);
-        });
-      }
-      document.getElementById('icon-modal').classList.remove('hidden');
-    }
-
-    function closeModal() { document.getElementById('icon-modal').classList.add('hidden'); }
-
-    function exportPDF() {
-      const element = document.getElementById('print-area');
-      html2pdf().set({
-        margin: 0,
-        filename: 'price_tags.pdf',
-        image: { type: 'jpeg', quality: 1.0 },
-        html2canvas: { scale: 3, useCORS: true, backgroundColor: '#ffffff' },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-      }).from(element).save();
-    }
-  </script>
+    <script src="app.js"></script>
 </body>
 </html>
