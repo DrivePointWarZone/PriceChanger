@@ -1,0 +1,93 @@
+/* Импорт полноценного Tailwind CSS */
+@import url('https://cloudflare.com');
+
+/* Подключение шрифта из репозитория */
+@font-face {
+  font-family: 'DDTHv-Regular';
+  src: url('fonts/DDTHv-Regular.woff2') format('woff2');
+  font-weight: bold;
+  font-style: normal;
+}
+
+.figma-font {
+  font-family: 'DDTHv-Regular', 'Impact', 'Arial Black', sans-serif;
+}
+
+/* Сетка печатного листа А4 */
+#print-area {
+  width: 210mm;
+  min-height: 297mm;
+  background: #ffffff;
+  padding: 20mm 15mm;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10mm;
+  box-sizing: border-box;
+}
+
+/* Черный ценник строго по Figma макету */
+.figma-tag {
+  width: 100%;
+  aspect-ratio: 1.58 / 1;
+  background-color: #0b0b0b;
+  color: #ffffff;
+  border: 2px solid #ffffff;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* Граффити-штрихи в углах */
+.figma-tag::before {
+  content: "";
+  position: absolute;
+  top: 6px; right: 0;
+  width: 45px; height: 12px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  border-top: 2px solid rgba(255,255,255,0.8);
+  border-bottom: 1px solid rgba(255,255,255,0.6);
+  transform: skewX(-30deg);
+}
+.figma-tag::after {
+  content: "";
+  position: absolute;
+  bottom: 25px; right: 0;
+  width: 60px; height: 8px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3));
+  border-top: 1px solid rgba(255,255,255,0.5);
+  transform: skewX(-30deg);
+}
+
+/* Желтая подложка цены */
+.price-badge {
+  background-color: #f2cc07;
+  color: #000000;
+  padding: 4px 16px;
+  font-size: 24px;
+  font-weight: 900;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  transform: rotate(-1deg);
+  box-shadow: 2px 2px 0px #ffffff;
+  position: relative;
+}
+
+/* Скрытие стрелок числового инпута */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* Кастомный скроллбар для интерфейса */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: #0f172a; }
+::-webkit-scrollbar-thumb { background: #334155; border-radius: 99px; }
