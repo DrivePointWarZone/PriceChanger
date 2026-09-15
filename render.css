@@ -1,0 +1,114 @@
+/* Подключаем ваш кастомный шрифт из корня гитхаба/проекта */
+@font-face {
+    font-family: 'DDTHv-Regular';
+    src: url('DDTHv-Regular.woff2') format('woff2');
+    font-weight: normal;
+    font-style: normal;
+    font-display: block;
+}
+
+/* Сетка ценников при экспорте */
+.tag-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 800px); /* Четкое разрешение под печать/экспорт */
+    gap: 20px;
+    padding: 20px;
+    background-color: #000000;
+}
+
+/* Отдельная карточка ценника */
+.single-tag {
+    width: 800px;
+    height: 533px; /* Пропорция 3:2 как на макете */
+    background-color: #000000;
+    background-image: url('bg-frame.png'); /* Постоянный задник из репозитория */
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    box-sizing: border-box;
+    font-family: 'DDTHv-Regular', sans-serif;
+    color: #ffffff;
+    overflow: hidden;
+}
+
+/* Верхняя строка: Иконка товара + Название */
+.tag-header-zone {
+    position: absolute;
+    top: 55px;
+    left: 65px;
+    right: 65px;
+    display: flex;
+    align-items: center;
+    gap: 30px;
+}
+
+.tag-product-icon {
+    width: 90px;
+    height: 90px;
+    object-fit: contain;
+}
+
+.tag-title-block {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.tag-title-text {
+    font-size: 56px;
+    line-height: 1.1;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Нижняя строка: Технические иконки + Цена */
+.tag-bottom-zone {
+    position: absolute;
+    bottom: 60px;
+    left: 65px;
+    right: 65px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+}
+
+/* Блок вспомогательных иконок (слева внизу) */
+.tag-meta-icons {
+    display: flex;
+    align-items: center;
+    gap: 25px;
+    height: 100px;
+}
+
+.icon-energy {
+    width: 65px;
+    height: 95px;
+    object-fit: contain;
+}
+
+.icon-type-marker {
+    width: 85px;
+    height: 95px;
+    object-fit: contain;
+}
+
+/* Желтая плашка цены */
+.tag-price-badge {
+    background-image: url('price-brush.png'); /* Желтый мазок-фон из фигмы */
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    padding: 20px 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 380px;
+    height: 130px;
+}
+
+.tag-price-value {
+    font-size: 82px;
+    color: #000000;
+    font-weight: bold;
+    line-height: 1;
+    white-space: nowrap;
+}
